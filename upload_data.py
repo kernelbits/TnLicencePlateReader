@@ -4,9 +4,13 @@ import os
 load_dotenv()
 #Loading our lib and env variables 
 
+WORKSPACE = "itgateinternship"
+PROJECT = "tunisian-license-plate-xe5yl-d8jgs"
+VERSION = 2
+
 
 rf = Roboflow(api_key=os.getenv("RF_API_KEY"))
-project = rf.workspace("itgateinternship").project("tunisian-license-plate-xe5yl-d8jgs")
+project = rf.workspace(WORKSPACE).project(PROJECT)
 #Accessing our project
 
 train_folder = "data/train"
