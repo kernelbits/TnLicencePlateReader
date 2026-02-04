@@ -1,5 +1,6 @@
 data
-.venv
+venv
 .env
 __pycache__
 predictions
+googleVision.json
