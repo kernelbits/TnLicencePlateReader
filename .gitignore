@@ -3,4 +3,9 @@ venv
 .env
 __pycache__
 predictions
-googleVision.json
+cropped_plates
+main.py
+test.py
+debug
+failed
+plates
