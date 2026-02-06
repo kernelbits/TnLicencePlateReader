@@ -2,3 +2,6 @@ roboflow
 python-dotenv
 opencv-python
 requests 
+paddleocr
+paddlepaddle
+easyocr
