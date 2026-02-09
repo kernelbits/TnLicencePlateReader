@@ -2,9 +2,5 @@ venv
 .env
 __pycache__
 cropped_plates
-main.py
-test.py
-todo.txt 
-rec_gt_train.txt
-rec_gt_val.txt
-
+fineTunePaddleOCR/cropped_plates
+fineTunePaddleOCR/cropped_platess
