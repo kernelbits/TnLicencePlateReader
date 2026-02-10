@@ -29,3 +29,5 @@ update_file('fineTunePaddleOCR/train.txt')
 update_file('fineTunePaddleOCR/val.txt')
 
 print("All files updated!")
+
+

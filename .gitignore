@@ -1,6 +1,6 @@
-venv
 .env
 __pycache__
 cropped_plates
-fineTunePaddleOCR/cropped_plates
-fineTunePaddleOCR/cropped_platess
+PaddleOCR
+backup
+data
