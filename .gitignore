@@ -4,4 +4,5 @@ cropped_plates
 PaddleOCR
 backup
 data
-trocr_model
+trocr_model_large
+trocr_model_base
