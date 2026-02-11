@@ -13,7 +13,6 @@ import base64
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
-print("Service role key:", os.getenv("SUPABASE_SERVICE_ROLE_KEY")[:10] + "..." if os.getenv("SUPABASE_SERVICE_ROLE_KEY") else "None")
 
 app = FastAPI()
 
@@ -22,10 +21,6 @@ supabase = create_client(
     os.getenv("SUPABASE_ANON_KEY")
 )
 
-supabase_admin = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
 
 # PaddleOCR API
 API_URL = "https://x715oe9el5j1ea8a.aistudio-app.com/layout-parsing"
@@ -44,11 +39,6 @@ model = project.version(VERSION).model
 CONFIDENCE_THRESHOLD = 0.3
 OVERLAP = 0.3
 RETRY_DELAY = 5
-
-@app.get("/")
-def read_root():
-    response = supabase.table("license_plates").select("*").limit(1).execute()
-    return {"hello": response.data}
 
 @app.post("/detect")
 async def detect_plates(image: UploadFile = File(...)):
