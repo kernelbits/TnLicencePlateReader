@@ -5,6 +5,7 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel, Seq2SeqTrain
 import torch
 from PIL import Image
 import evaluate
+import numpy as np
 
 # --- Config ---
 DATASET_PATH = "./data"
@@ -32,7 +33,7 @@ val_ds = dataset["test"]
 
 # --- Processor & Model ---
 processor = TrOCRProcessor.from_pretrained(MODEL_NAME)
-model = VisionEncoderDecoderModel.from_pretrained(MODEL_NAME)
+model = VisionEncoderDecoderModel.from_pretrained("./trocr_model/checkpoint-4000")
 
 # 🔥 VRAM saver
 model.gradient_checkpointing_enable()
@@ -120,7 +121,7 @@ if os.path.isdir(OUTPUT_DIR):
         checkpoint = os.path.join(OUTPUT_DIR, sorted(checkpoints, key=lambda x: int(x.split("-")[1]))[-1])
         print("Resuming from:", checkpoint)
 
-trainer.train(resume_from_checkpoint=checkpoint)
+trainer.train()
 
 trainer.save_model(OUTPUT_DIR)
 print("Training done. Model saved in", OUTPUT_DIR)
