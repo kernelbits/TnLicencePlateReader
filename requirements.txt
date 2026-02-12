@@ -1,7 +1,6 @@
 roboflow
 python-dotenv
-opencv-python
-requests 
-easyocr
-pytorch
+requests
 supabase
+pillow
+fastapi

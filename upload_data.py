@@ -2,7 +2,6 @@ from roboflow import Roboflow
 from dotenv import load_dotenv
 import os 
 load_dotenv()
-#Loading our lib and env variables 
 
 WORKSPACE = "itgateinternship"
 PROJECT = "tunisian-license-plate-xe5yl-d8jgs"
@@ -13,7 +12,7 @@ rf = Roboflow(api_key=os.getenv("RF_API_KEY"))
 project = rf.workspace(WORKSPACE).project(PROJECT)
 #Accessing our project
 
-train_folder = "data/train"
+train_folder = "data/images"
 
 # Get all jpg files
 for filename in os.listdir(train_folder):

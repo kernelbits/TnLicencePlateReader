@@ -9,7 +9,7 @@ PROJECT = "tunisian-license-plate-xe5yl-d8jgs"
 VERSION = 2
 
 
-TEST_IMAGE_PATH = "data/test_image.webp"
+TEST_IMAGE_PATH = "data/test_images/test.jpg"
 os.makedirs("predictions", exist_ok=True)
 
 
