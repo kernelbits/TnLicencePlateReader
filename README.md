@@ -25,13 +25,25 @@ A full-stack application for detecting and reading Tunisian license plates using
    - `OCR_API_URL`: PaddleOCR endpoint URL
    - `OCR_TOKEN`: PaddleOCR access token
 
+3. (Optional) Install and start **Ollama** for the AI Assistant:
+   - Download Ollama from [ollama.com](https://ollama.com).
+   - Pull the required model: `ollama pull llama3.2:3b`.
+   - Ensure Ollama is running in the background.
+
 ## Usage
 
 1. Start the backend:
    ```bash
-   python backend/backend.py
+   python -m uvicorn backend.backend:app --reload
    ```
 2. Start the frontend:
    ```bash
    python frontend/main.py
    ```
+
+## Features
+
+- **Plate Detection**: Uses YOLOv11 via Roboflow to locate plates.
+- **Character Recognition**: Uses PaddleOCR for precise alphanumeric extraction.
+- **Database Integration**: Looks up driver details in Supabase.
+- **AI Assistant**: A built-in chatbot powered by local **Ollama (llama3.2:3b)** that can query your database using natural language.

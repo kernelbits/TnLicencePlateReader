@@ -6,3 +6,6 @@ backup
 data
 trocr_model_large
 trocr_model_base
+.venv
+.gradio
+

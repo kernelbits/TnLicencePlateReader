@@ -5,12 +5,12 @@ from PIL import Image
 from roboflow import Roboflow
 import time
 
-DATA_DIR = Path("data")           # Folder with images to process
-PLATES_DIR = Path("cropped_plates")       # Folder to save cropped plates
-FAILED_DIR = Path("failed")       # Folder for images with no plates
-CONFIDENCE_THRESHOLD = 0.6        # Minimum confidence to consider detection
-OVERLAP = 0.3                     # Overlap for Roboflow prediction (if used)
-RETRY_DELAY = 5                    # Seconds to wait on network/API error
+DATA_DIR = Path("data")
+PLATES_DIR = Path("cropped_plates")
+FAILED_DIR = Path("failed")
+CONFIDENCE_THRESHOLD = 0.6
+OVERLAP = 0.3
+RETRY_DELAY = 5
 
 PLATES_DIR.mkdir(exist_ok=True)
 FAILED_DIR.mkdir(exist_ok=True)
