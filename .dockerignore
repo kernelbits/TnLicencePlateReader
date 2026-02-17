@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local data (keep test images but exclude heavy training data if any)
+data/images/
+
+# Logs
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Credentials (mounted via env or secrets at runtime)
+.env

@@ -2,8 +2,9 @@ import gradio as gr
 import requests
 import os
 
-API_URL = "http://127.0.0.1:8000/detect"
-CHAT_API_URL = "http://127.0.0.1:8000/chat"
+BACKEND_BASE_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+API_URL = f"{BACKEND_BASE_URL}/detect"
+CHAT_API_URL = f"{BACKEND_BASE_URL}/chat"
 
 # To keep track of the last detected plate for chat context
 state = {"last_plate": None}

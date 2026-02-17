@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+    environment:
+      # Override Ollama URL to point to the local service name inside compose
+      - OLLAMA_API_URL=http://ollama:11434/api/generate
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ollama
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "7860:7860"
+    depends_on:
+      - backend
+
+  # Optional: Local Ollama service (comment out if you will use an external Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama:
