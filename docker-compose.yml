@@ -8,7 +8,6 @@ services:
     env_file:
       - .env
     environment:
-      # Override Ollama URL to point to the local service name inside compose
       - OLLAMA_API_URL=http://ollama:11434/api/generate
     ports:
       - "8000:8000"
@@ -26,7 +25,6 @@ services:
     depends_on:
       - backend
 
-  # Optional: Local Ollama service (comment out if you will use an external Ollama)
   ollama:
     image: ollama/ollama:latest
     ports:
