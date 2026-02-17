@@ -1,4 +1,3 @@
-# Python cache
 __pycache__/
 *.pyc
 *.pyo
@@ -14,7 +13,6 @@ ENV/
 .idea/
 .DS_Store
 
-# Local data (keep test images but exclude heavy training data if any)
 data/images/
 
 # Logs
@@ -24,5 +22,5 @@ data/images/
 .git/
 .gitignore
 
-# Credentials (mounted via env or secrets at runtime)
+# Credentials 
 .env
