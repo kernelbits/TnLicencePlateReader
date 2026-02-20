@@ -47,6 +47,16 @@ def detect_plate(image):
             if image_url:
                 info += f"\nCropped Image: {image_url}"
             
+            # AI Validation info
+            vision = result.get("vision_validation")
+            if vision:
+                if "error" in vision:
+                    info += f"\n\n🤖 AI Validation Error: {vision['error']}"
+                else:
+                    info += f"\n\n🤖 AI Validation: {vision.get('message', 'No message')}"
+                    if not vision.get("match"):
+                         info += f"\n   (AI Raw: {vision.get('ai_raw', 'N/A')})"
+            
             print(f"Successfully processed result for plate: {plate}")
             return info
         else:

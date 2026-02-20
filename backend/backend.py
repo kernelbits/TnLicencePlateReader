@@ -57,6 +57,7 @@ RETRY_DELAY = 5
 
 OLLAMA_API = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
 MODEL_NAME = "llama3.2:3b"
+VISION_MODEL = "glm-ocr:latest"
 
 class ChatRequest(BaseModel):
     message: str
@@ -350,6 +351,10 @@ async def detect_plates(image: UploadFile = File(...)):
             print(f"Logging failed: {e}")
             image_url = None
 
+        # AI Vision Validation
+        print("Starting AI Vision validation...")
+        vision_result = validate_with_vision(file_data, plate_number)
+
         # Ensure image_url is JSON serializable (string or None)
         if image_url is not None:
             image_url = str(image_url)
@@ -357,13 +362,12 @@ async def detect_plates(image: UploadFile = File(...)):
         response_data = {
             "plate_number": plate_number,
             "driver_info": db_result[0] if (db_result and len(db_result) > 0) else None,
-            "image_url": image_url
+            "image_url": image_url,
+            "vision_validation": vision_result
         }
         
         print(f"Success! Returning response: {response_data}")
-        # Explicitly use jsonable_encoder to prevent serialization errors
-        return JSONResponse(content=jsonable_encoder(response_data))
-        
+        return response_data
     except Exception as e:
         print(f"CRITICAL ERROR in /detect: {e}")
         import traceback
@@ -443,3 +447,41 @@ def log_detection(plate_number, image_bytes):
     except Exception as e:
         print(f"Error in log_detection: {e}")
         return None
+
+def validate_with_vision(image_base64, ocr_result):
+    """Calls a vision-capable Ollama model to validate the plate and compare it with OCR."""
+    print(f"--- AI Vision Validation with {VISION_MODEL} ---")
+    prompt = f"Extract the license plate number from this image of a Tunisian license plate. The previous OCR extraction gave '{ocr_result}'. Check if this is correct and provide the final plate number (only digits). Just the digits, please."
+    
+    try:
+        response = requests.post(OLLAMA_API, json={
+            "model": VISION_MODEL,
+            "prompt": prompt,
+            "images": [image_base64],
+            "stream": False,
+            "options": {"temperature": 0}
+        }, timeout=30)
+        
+        if response.status_code == 200:
+            ai_text = response.json().get("response", "").strip()
+            print(f"AI Vision response: {ai_text}")
+            
+            # Extract digits from AI response
+            ai_digits = "".join(c for c in ai_text if c.isdigit())
+            
+            # Simple comparison
+            ocr_digits = "".join(c for c in ocr_result if c.isdigit())
+            match = ai_digits == ocr_digits
+            
+            return {
+                "ai_raw": ai_text,
+                "ai_digits": ai_digits,
+                "match": match,
+                "message": "AI confirms OCR result." if match else f"AI suggests different result: {ai_digits} vs OCR {ocr_digits}"
+            }
+        else:
+            print(f"Ollama Vision API error: {response.status_code} - {response.text}")
+            return {"error": f"Vision API error: {response.status_code}"}
+    except Exception as e:
+        print(f"Error in validate_with_vision: {e}")
+        return {"error": str(e)}
