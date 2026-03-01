@@ -34,14 +34,12 @@ if SUPABASE_URL:
         supabase = create_client(SUPABASE_URL, key)
 
 
-# PaddleOCR API
 API_URL = os.getenv("OCR_API_URL")
 TOKEN = os.getenv("OCR_TOKEN")
 
 if not API_URL or not TOKEN:
     print("WARNING: OCR_API_URL or OCR_TOKEN is not set in .env file")
 
-# Roboflow
 WORKSPACE = "itgateinternship"
 PROJECT = "tunisian-license-plate-xe5yl-d8jgs"
 VERSION = 2
@@ -69,7 +67,6 @@ async def chat_endpoint(request: ChatRequest):
     print(f"\n--- New Chat Request ---")
     print(f"User Message: {request.message}")
     
-    # 1. Ask Ollama to interpret the message and decide if it needs a database query
     schema_context = """
     Database Tables:
     1. license_plates:
@@ -131,7 +128,6 @@ async def chat_endpoint(request: ChatRequest):
     """
     
     try:
-        # Check if Ollama is running
         try:
             ollama_res = requests.post(OLLAMA_API, json={
                 "model": MODEL_NAME,
@@ -147,10 +143,8 @@ async def chat_endpoint(request: ChatRequest):
         ai_response = ollama_res.json().get("response", "")
         print(f"AI Response Raw: {ai_response}")
         
-        # Parse AI response
         if "ACTION: QUERY" in ai_response or (ai_response.strip().startswith("{") and "table" in ai_response):
             import re
-            # Try to find JSON in the response
             json_match = re.search(r"(\{.*\})", ai_response, re.DOTALL)
             if json_match:
                 try:
@@ -162,7 +156,6 @@ async def chat_endpoint(request: ChatRequest):
                     print(f"AI decided to query {table} (select {select}) with filters {filters}")
                     
                     if supabase:
-                        # Construct query
                         query = supabase.table(table).select(select)
                         for f in filters:
                             col = f.get("col")
@@ -189,7 +182,6 @@ async def chat_endpoint(request: ChatRequest):
                         results = db_res.data
                         print(f"Database results found: {len(results)}")
                         
-                        # Final processing by AI
                         final_prompt = f"""
                         You are an AI assistant for the Tunisian License Plate Reader system.
                         User asked: {request.message}
@@ -215,9 +207,7 @@ async def chat_endpoint(request: ChatRequest):
                         return {"answer": "Database connection not available.", "data": []}
                 except Exception as parse_err:
                     print(f"Error parsing AI query JSON: {parse_err}")
-                    # Fall back to returning the raw response
-        
-        # If not a query or if parsing failed, return the AI response directly
+
         answer = ai_response.replace("ACTION: ANSWER", "").replace("DATA:", "").strip()
         return {"answer": answer}
 
@@ -242,7 +232,6 @@ async def detect_plates(image: UploadFile = File(...)):
         img = img.resize((640, 640))
         img.save(temp_path)
         
-        # Predict
         print("Running Roboflow prediction...")
         success = False
         retries = 0
@@ -275,7 +264,6 @@ async def detect_plates(image: UploadFile = File(...)):
         
         cropped = img.crop((left, top, right, bottom))
         
-        # PaddleOCR
         print("Preparing for PaddleOCR...")
         cropped_buffer = io.BytesIO()
         cropped.save(cropped_buffer, format="JPEG")
@@ -336,14 +324,12 @@ async def detect_plates(image: UploadFile = File(...)):
         
         print(f"OCR Raw Text: {raw_text}")
         digits = "".join(c for c in raw_text if c.isdigit())
-        # Formulate plate number with Arabic characters
         plate_number = f"{digits[:3].zfill(3)}تونس{digits[-4:].zfill(4)}"
         print(f"Processed Plate Number: {plate_number}")
         
         print("Querying database for driver info...")
         db_result = query_database(plate_number)
         
-        # Log detection to Supabase
         print("Logging detection and uploading cropped image...")
         try:
             image_url = log_detection(plate_number, cropped_data)
@@ -351,11 +337,9 @@ async def detect_plates(image: UploadFile = File(...)):
             print(f"Logging failed: {e}")
             image_url = None
 
-        # AI Vision Validation
         print("Starting AI Vision validation...")
         vision_result = validate_with_vision(file_data, plate_number)
 
-        # Ensure image_url is JSON serializable (string or None)
         if image_url is not None:
             image_url = str(image_url)
 
@@ -363,7 +347,8 @@ async def detect_plates(image: UploadFile = File(...)):
             "plate_number": plate_number,
             "driver_info": db_result[0] if (db_result and len(db_result) > 0) else None,
             "image_url": image_url,
-            "vision_validation": vision_result
+            "vision_validation": vision_result,
+            "predictions": predictions
         }
         
         print(f"Success! Returning response: {response_data}")
@@ -396,23 +381,18 @@ def log_detection(plate_number, image_bytes):
         return None
     
     try:
-        # 1. Upload cropped image to 'plates' bucket
-        # Sanitize plate_number for filename (remove Arabic characters or non-ASCII)
         safe_plate = "".join(c for c in plate_number if c.isalnum() and ord(c) < 128)
         file_name = f"detection_{int(time.time())}_{safe_plate}.jpg"
         bucket_name = "plates"
         
-        # Supabase storage upload
         supabase.storage.from_(bucket_name).upload(
             path=file_name,
             file=image_bytes,
             file_options={"content-type": "image/jpeg"}
         )
         
-        # 2. Get Public URL
         res = supabase.storage.from_(bucket_name).get_public_url(file_name)
         
-        # Handle different return types from get_public_url depending on version
         if isinstance(res, str):
             image_url = res
         elif hasattr(res, "public_url"):
@@ -422,15 +402,12 @@ def log_detection(plate_number, image_bytes):
         else:
             image_url = str(res)
 
-        # 3. Insert into detection_logs
         log_data = {
             "plate_number": plate_number,
             "image_url": image_url,
         }
         
-        # Try inserting - if the table doesn't exist, this will fail but we still return the image_url
         try:
-            # Convert any non-serializable objects in log_data
             serializable_log_data = {
                 "plate_number": str(plate_number),
                 "image_url": str(image_url) if image_url else None
@@ -440,7 +417,6 @@ def log_detection(plate_number, image_bytes):
             print("Insert successful")
         except Exception as e:
             print(f"Error inserting into detection_logs: {e}")
-            # The table might not exist yet, but the image is uploaded
             
         return image_url
         
@@ -449,7 +425,6 @@ def log_detection(plate_number, image_bytes):
         return None
 
 def validate_with_vision(image_base64, ocr_result):
-    """Calls a vision-capable Ollama model to validate the plate and compare it with OCR."""
     print(f"--- AI Vision Validation with {VISION_MODEL} ---")
     prompt = f"Extract the license plate number from this image of a Tunisian license plate. The previous OCR extraction gave '{ocr_result}'. Check if this is correct and provide the final plate number (only digits). Just the digits, please."
     
@@ -466,10 +441,8 @@ def validate_with_vision(image_base64, ocr_result):
             ai_text = response.json().get("response", "").strip()
             print(f"AI Vision response: {ai_text}")
             
-            # Extract digits from AI response
             ai_digits = "".join(c for c in ai_text if c.isdigit())
             
-            # Simple comparison
             ocr_digits = "".join(c for c in ocr_result if c.isdigit())
             match = ai_digits == ocr_digits
             
